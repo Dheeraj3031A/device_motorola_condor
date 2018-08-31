@@ -97,5 +97,8 @@ void vendor_load_properties()
         property_set("ro.telephony.default_network", "0");
         property_set("persist.radio.multisim.config", "");
     }
+
+    // Init a dummy BT MAC address, will be overwritten later
+    property_set("ro.boot.btmacaddr", "00:00:00:00:00:00");
 }
 
