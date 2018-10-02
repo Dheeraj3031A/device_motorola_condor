@@ -27,6 +27,9 @@ $(call inherit-product-if-exists, vendor/motorola/condor/condor-vendor.mk)
 # Common Android Go configurations
 $(call inherit-product, build/target/product/go_defaults.mk)
 
+# Soong namespaces
+PRODUCT_SOONG_NAMESPACES += device/motorola/condor
+
 # Ramdisk
  PRODUCT_COPY_FILES += \
      $(call find-copy-subdir-files,*,${LOCAL_PATH}/ramdisk,root)
