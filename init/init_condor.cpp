@@ -60,10 +60,6 @@ void vendor_load_properties()
     std::string radio;
     std::string device;
 
-    platform = GetProperty("ro.board.platform", "");
-    if (platform != ANDROID_TARGET)
-        return;
-
     property_override_dual("ro.product.model","ro.vendor.product.model", "Moto E");
     radio = GetProperty("ro.boot.radio", "");
     if (radio == "0x1") {
