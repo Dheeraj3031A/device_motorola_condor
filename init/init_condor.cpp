@@ -25,7 +25,7 @@
    IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#include <stdlib.h>
+#include <vector>
 #include <stdio.h>
 #define _REALLY_INCLUDE_SYS__SYSTEM_PROPERTIES_H_
 #include <sys/_system_properties.h>
@@ -37,21 +37,23 @@
 using android::base::GetProperty;
 using android::init::property_set;
 
-void property_override(char const prop[], char const value[])
+std::vector<std::string> ro_props_default_source_order = {
+    "",
+    "odm.",
+    "product.",
+    "system.",
+    "vendor.",
+};
+
+void property_override(char const prop[], char const value[], bool add = true)
 {
     prop_info *pi;
 
     pi = (prop_info*) __system_property_find(prop);
     if (pi)
         __system_property_update(pi, value, strlen(value));
-    else
+    else if (add)
         __system_property_add(prop, strlen(prop), value, strlen(value));
-}
-
-void property_override_dual(char const system_prop[], char const vendor_prop[], char const value[])
-{
-    property_override(system_prop, value);
-    property_override(vendor_prop, value);
 }
 
 void vendor_load_properties()
@@ -60,38 +62,58 @@ void vendor_load_properties()
     std::string radio;
     std::string device;
 
-    property_override_dual("ro.product.model","ro.vendor.product.model", "Moto E");
+    const auto set_ro_build_prop = [](const std::string &source,
+        const std::string &prop, const std::string &value) {
+    auto prop_name = "ro." + source + "build." + prop;
+    property_override(prop_name.c_str(), value.c_str(), false);
+    };
+
+    const auto set_ro_product_prop = [](const std::string &source,
+        const std::string &prop, const std::string &value) {
+    auto prop_name = "ro.product." + source + prop;
+    property_override(prop_name.c_str(), value.c_str(), false);
+    };
+
+    for (const auto &source : ro_props_default_source_order) {
+        set_ro_product_prop(source, "model", "Moto E");
+    }
     radio = GetProperty("ro.boot.radio", "");
     if (radio == "0x1") {
         /* xt1021 */
-        property_override_dual("ro.product.device", "ro.vendor.product.device", "condor_umts");
         property_override("ro.build.product", "condor_umts");
         property_override("ro.build.description", "condor_reteu-user 5.1 LPC23.13-34.8 9 release-keys");
-        property_override_dual("ro.build.fingerprint", "ro.vendor.build.fingerprint", "motorola/condor_reteu/condor_umts:5.1/LPC23.13-34.8/9:user/release-keys");
         property_set("ro.mot.build.customerid", "reteu");
         property_set("ro.telephony.default_network", "0");
         property_set("persist.radio.multisim.config", "");
+        for (const auto &source : ro_props_default_source_order) {
+            set_ro_build_prop(source, "fingerprint", "motorola/condor_reteu/condor_umts:5.1/LPC23.13-34.8/9:user/release-keys");
+            set_ro_product_prop(source, "device", "condor_umts");
+        }
     } else if (radio == "0x5") {
         /* xt1022 */
-        property_override_dual("ro.product.device","ro.vendor.product.device", "condor_umtsds");
         property_override("ro.build.product", "condor_umtsds");
         property_override("ro.build.description", "condor_retaildsds-user 5.1 LPC23.13-34.8 12 release-keys");
-        property_override_dual("ro.build.fingerprint", "ro.vendor.build.fingerprint", "motorola/condor_retaildsds/condor_umtsds:5.1/LPC23.13-34.8/12:user/release-keys");
         property_set("ro.mot.build.customerid", "retaildsdsall");
         property_set("ro.telephony.default_network", "0,1");
         property_set("ro.telephony.ril.config", "simactivation,sim2gsmonly");
         property_set("persist.radio.multisim.config", "dsds");
         property_set("persist.radio.dont_use_dsd", "true");
         property_set("persist.radio.plmn_name_cmp", "1");
+        for (const auto &source : ro_props_default_source_order) {
+            set_ro_build_prop(source, "fingerprint", "motorola/condor_retaildsds/condor_umtsds:5.1/LPC23.13-34.8/12:user/release-keys");
+            set_ro_product_prop(source, "device", "condor_umtsds");
+        }
     } else if (radio == "0x6") {
         /* xt1023 */
-        property_override_dual("ro.product.device", "ro.vendor.product.device", "condor_umts");
         property_override("ro.build.product", "condor_umts");
         property_override("ro.build.description", "condor_retuaws-user 5.1 LPC23.13-34.8 9 release-keys");
-        property_override_dual("ro.build.fingerprint", "ro.vendor.build.fingerprint", "motorola/condor_retuaws/condor_umts:5.1/LPC23.13-34.8/9:user/release-keys");
         property_set("ro.mot.build.customerid", "retusa_aws");
         property_set("ro.telephony.default_network", "0");
         property_set("persist.radio.multisim.config", "");
+        for (const auto &source : ro_props_default_source_order) {
+            set_ro_build_prop(source, "fingerprint", "motorola/condor_retuaws/condor_umts:5.1/LPC23.13-34.8/9:user/release-keys");
+            set_ro_product_prop(source, "device", "condor_umts");
+        }
     }
 
     // Init a dummy BT MAC address, will be overwritten later
