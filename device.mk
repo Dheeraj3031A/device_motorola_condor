@@ -22,7 +22,7 @@
 LOCAL_PATH := device/motorola/condor
 
 # device specific vendor blobs
-$(call inherit-product-if-exists, vendor/motorola/condor/condor-vendor.mk)
+$(call inherit-product, vendor/motorola/condor/condor-vendor.mk)
 
 # Common Android Go configurations
 $(call inherit-product, build/target/product/go_defaults.mk)
